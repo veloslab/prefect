@@ -96,9 +96,8 @@ class MySql:
         :param structure: Stucture of temp table, Ex. '(id INT, PRIMARY KEY(id))'
         :return: Temp Table that was created
         """
-        table = f"`tmp`.`py_{datetime.now().date()}_{uuid4().hex}`"
+        table = f"`tmp`.`py_{datetime.now().strftime('%Y%m%d')}_{uuid4().hex}`"
         query = f"CREATE TABLE IF NOT EXISTS {table} {structure}"
-        print(query)
         self.connection_manager.query(query)
         self.connection_manager.add_temp_table(table)
         return table
