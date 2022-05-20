@@ -4,3 +4,4 @@ hvac==0.11.2
 parsel==1.6.0
 pandas==1.4.2
 pymysql==1.0.2
+alerta==8.5.1
