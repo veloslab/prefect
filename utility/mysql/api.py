@@ -6,6 +6,9 @@ def query(q: str, query_args=None):
     with MySql('prefect') as mysql:
         return mysql.query(q, query_args=query_args)
 
+def query(q: str, query_args=None):
+    with MySql('prefect') as mysql:
+        return mysql.query(q, query_args=query_args)
 
 def insert(table: str,
            data: Union[List[Dict], Dict],

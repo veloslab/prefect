@@ -1,5 +1,7 @@
 from .connection_manager import ConnectionManager
 from pandas import DataFrame
+from datetime import datetime
+from uuid import uuid4
 from typing import Union, Dict, List
 
 
@@ -64,6 +66,14 @@ class MySql:
                table: str, data: Union[List[Dict], Dict],
                insert_type: str = 'INSERT',
                odku: str = None):
+        """
+        Insert data in table
+        :param table: Table
+        :param data: Data that should be inserted, must be dict or list dicts where key is column that value should be inserted into
+        :param insert_type: Default is 'INSERT', can be 'REPLACE' or 'INSERT IGNORE' as well
+        :param odku: Add 'ON DUPLICATE KEY UPDATE' statement to insert, value passed will be added after statement
+        :return:
+        """
 
         data = [data] if isinstance(data, dict) else data
         columns = data[0].keys()
@@ -78,4 +88,17 @@ class MySql:
             row_statements.append("('" + "', '".join(str(i) for i in row.values()) + "')")
         insert_query = insert_statement + "\n" + ",\n".join(row_statements) + odku_statement
 
-        return self.connection_manager.query(insert_query.strip())
+        return self.connection_manager.query(insert_query)
+
+    def temp_table(self, structure: str):
+        """
+        Create temp table that will be dropped after process ends
+        :param structure: Stucture of temp table, Ex. '(id INT, PRIMARY KEY(id))'
+        :return: Temp Table that was created
+        """
+        table = f"`tmp`.`py_{datetime.now().date()}_{uuid4().hex}`"
+        query = f"CREATE TABLE IF NOT EXISTS {table} {structure}"
+        print(query)
+        self.connection_manager.query(query)
+        self.connection_manager.add_temp_table(table)
+        return table

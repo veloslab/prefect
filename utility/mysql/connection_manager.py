@@ -1,8 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
-from sqlalchemy import text, insert
+from sqlalchemy import text
+from datetime import datetime
+from typing import Dict
 import atexit
-from typing import Union, Dict, List
 from utility.hashicorp.vault import Vault
 
 
@@ -28,6 +29,9 @@ class ConnectionManager:
             else:
                 result_proxy = conn.execute(text(query).execution_options(auto_commit=True))
         return result_proxy
+
+    def add_temp_table(self, table: str):
+        self.temp_tables.append(table)
 
     def __cleanup(self):
         self.engine.dispose()
