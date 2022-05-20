@@ -1,4 +1,4 @@
-from .connection_manager import ConnectionManager
+from .connection import Connection, Result
 from pandas import DataFrame
 from datetime import datetime
 from uuid import uuid4
@@ -6,15 +6,12 @@ from typing import Union, Dict, List
 
 
 class MySql:
-    connection_managers = {}
+    connections = {}
 
-    def __init__(self, role: str):
-        self.cm_key = role
-
-        if self.connection_managers.get(self.cm_key, None) is None:
-            self.connection_managers[self.cm_key] = ConnectionManager(role=role)
-
-        self.connection_manager = self.connection_managers[self.cm_key]
+    def __init__(self, role: str, host: str):
+        self.role = role
+        if MySql.connections.get(role, None) is None:
+            MySql.connections[role] = Connection(role=role, host=host)
 
     def __enter__(self):
         return self
@@ -22,45 +19,55 @@ class MySql:
     def __exit__(self, *args):
         return None
 
+    @property
+    def connection(self) -> Connection:
+        return MySql.connections[self.role]
+
     def query(self,
               query: str,
-              query_args: Dict = None,
               pandas: bool = False,
               one_column: bool = False,
               one_row: bool = False,
-              one_value: bool = False):
-
+              one_value: bool = False) -> Union[Result, Dict, List, DataFrame]:
+        """
+        Query MySql database, preferably using SELECT
+        :param query: Query
+        :param pandas: Default False, if True will return results as pandas.Dataframe
+        :param one_column: Default False, if True it will return result as List
+        :param one_row: Default True, if True will return result as Dictionary
+        :param one_value: Default False, if True will return as a value that depends on mysql column structure
+        :return:  Query Result
+        """
         if sum([one_column, one_row, one_value]) > 1:
             raise ValueError("You can only set one of these true: one_column, one_row, one_value")
 
-        result_proxy = self.connection_manager.query(query, query_args=query_args)
+        result = self.connection.execute(query)
 
         if pandas:
             if not query.lower().strip().startswith("select"):
                 raise ValueError("Pandas=True only works when doing a select query!")
-            df = DataFrame(result_proxy)
-            df.columns = result_proxy.keys()
+            df = DataFrame(result.data)
+            df.columns = result.columns
             return df
 
-        if result_proxy.returns_rows:
-            row_count = result_proxy.rowcount
-            column_count = len(result_proxy.keys())
-
-            if (one_row or one_value) and row_count > 1:
-                raise ValueError(f"Query resulted in {row_count} rows "
+        if result.affected:
+            if (one_row or one_value) and result.affected > 1:
+                raise ValueError(f"Query resulted in {result.affected} rows "
                                  f"but one_{'row' if one_row else 'value'} set to True")
 
-            if (one_column or one_value) and column_count > 1:
-                raise ValueError(f"Query resulted in {column_count} columns "
-                                 f"but one_{'row' if one_row else 'value'} set to True")
+            if (one_column or one_value) and len(result.columns) > 1:
+                raise ValueError(f"Query resulted in {len(result.columns)} columns "
+                                 f"but one_{'column' if one_row else 'value'} set to True")
             if one_value:
-                return result_proxy.fetchone()[0]
+                return result.data[0].values()[0]
             elif one_row:
-                return result_proxy.fetchone()
+                return result.data[0]
+            elif one_column:
+                return [i.values()[0] for i in result.data]
             else:
-                return result_proxy.fetchall()
+                return result.data
         else:
-            return None
+            return result
 
     def insert(self,
                table: str, data: Union[List[Dict], Dict],
@@ -88,7 +95,7 @@ class MySql:
             row_statements.append("('" + "', '".join(str(i) for i in row.values()) + "')")
         insert_query = insert_statement + "\n" + ",\n".join(row_statements) + odku_statement
 
-        return self.connection_manager.query(insert_query)
+        return self.connection.execute(insert_query)
 
     def temp_table(self, structure: str):
         """
@@ -98,6 +105,6 @@ class MySql:
         """
         table = f"`tmp`.`py_{datetime.now().strftime('%Y%m%d')}_{uuid4().hex}`"
         query = f"CREATE TABLE IF NOT EXISTS {table} {structure}"
-        self.connection_manager.query(query)
-        self.connection_manager.add_temp_table(table)
+        self.connection.connect.query(query)
+        self.connection.add_temp_table(table)
         return table
