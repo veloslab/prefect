@@ -1,44 +1,68 @@
 import os
 import hvac
 from typing import Dict
+from logging import getLogger
+logger = getLogger('vault')
 
 
 class Vault:
-    client: hvac.Client = None
+    _client: hvac.Client = None
 
-    @staticmethod
-    def get_client() -> hvac.Client:
-        if Vault.client is None:
-            Vault.client = hvac.Client(url=os.environ['VAULT_ADDR'])
-            Vault.client.auth.approle.login(
-                role_id=os.environ['VAULT_ROLE_ID'],
-                secret_id=os.environ['VAULT_SECRET_ID']
+    @classmethod
+    @property
+    def client(cls) -> hvac.Client:
+        if cls._client is None:
+            cls.authenticate()
+        return cls._client
+
+    @classmethod
+    def authenticate(cls, url: str = None, token: str = None, role_id: str = None, secret_id: str = None):
+        url = url or os.environ['VAULT_ADDR']
+        client = hvac.Client(url=url)
+        token = token or os.environ.get('VAULT_TOKEN', None)
+        if token:
+            logger.info("Using token for authentication")
+            client.token = token
+        else:
+            logger.info("Using approle for authentication")
+            role_id = role_id or os.environ.get('VAULT_ROLE_ID', None)
+            secret_id = secret_id or os.environ.get('VAULT_SECRET_ID', None)
+            client.auth.approle.login(
+                secret_id=secret_id,
+                role_id=role_id
             )
-        return Vault.client
+        if not client.is_authenticated():
+            raise Exception("Failed to authenticate with vault")
 
-    @staticmethod
-    def get_static_database_credentials(role: str, mount: str = 'database') -> Dict:
+        logger.info("Authenticated")
+
+        cls._client = client
+
+        return True
+
+    @classmethod
+    def get_static_database_credentials(cls, role: str, mount: str = 'database') -> Dict:
         """
         Get static database credential from vault
         :param role: Role for credential
         :param mount: Mount for database engine
         :return: Dictionary with username and password
         """
-        response = Vault.get_client().secrets.database.get_static_credentials(role, mount_point=mount)
+        response = cls.client.secrets.database.get_static_credentials(role, mount_point=mount)
         return {
             'username': response['data']['username'],
             'password': response['data']['password'],
         }
 
-    @staticmethod
-    def get_secret(path: str, mount: str = 'secret'):
+    @classmethod
+    def get_secret(cls, path: str, mount: str = 'secret'):
         """
         Get secret from vault, only supports kv2 secret engine
         :param path: Path for secret
         :param mount: Mount for kv2 engine
         :return: Dictionary with username and password
         """
-        response = Vault.get_client().secrets.kv.v2.read_secret_version(
+        response = cls.client.secrets.kv.v2.read_secret_version(
             path=path,
             mount_point=mount
         )
