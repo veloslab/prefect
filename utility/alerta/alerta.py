@@ -4,14 +4,18 @@ from typing import List, Dict
 
 
 class Alerta:
-    client: Client = None
-    debug: bool = False
+    _client: Client = None
 
     @classmethod
-    def create_client(cls, endpoint: str, key: str = None) -> Client:
-        if cls.client is None:
-            Alerta.client = Client(endpoint=endpoint, key=key, debug=cls.debug)
-        return cls.client
+    @property
+    def client(cls, endpoint: str = None, key: str = None, debug: bool = False) -> Client:
+        if cls._client is None:
+            if endpoint and key:
+                cls._client = Client(endpoint, key, debug=debug)
+            else:
+                credentials = Vault.get_secret('alerta/api/alert')
+                cls._client = Client(endpoint=credentials['host'], key=credentials['key'], debug=debug)
+        return cls._client
 
     @classmethod
     def send_alert(cls,
@@ -23,10 +27,10 @@ class Alerta:
                    correlate: List = None,
                    tags: List = None,
                    group: str = None,
-                   severity: str = None,
+                   severity: str = 'ok',
                    value: str = None,
                    attributes: Dict = None,
-                   timeout: int = None):
+                   timeout: int = None) -> Alert:
         """
         Send Alert
         :param environment: Environment eg. Production, Development
@@ -51,8 +55,5 @@ class Alerta:
             if value:
                 data[key] = value
 
-        print(data)
-
-if __name__ == '__main__':
-    Alerta.send_alert('test', 'ters', 'eafd')
-
+        alert = cls.client.send_alert(**data)
+        return alert

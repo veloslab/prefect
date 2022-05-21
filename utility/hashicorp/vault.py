@@ -2,7 +2,7 @@ import os
 import hvac
 from typing import Dict
 from logging import getLogger
-logger = getLogger('vault')
+logger = getLogger('hashicorp.vault')
 
 
 class Vault:
@@ -21,10 +21,10 @@ class Vault:
         client = hvac.Client(url=url)
         token = token or os.environ.get('VAULT_TOKEN', None)
         if token:
-            logger.info("Using token for authentication")
+            logger.debug("Using token for authentication")
             client.token = token
         else:
-            logger.info("Using approle for authentication")
+            logger.debug("Using approle for authentication")
             role_id = role_id or os.environ.get('VAULT_ROLE_ID', None)
             secret_id = secret_id or os.environ.get('VAULT_SECRET_ID', None)
             client.auth.approle.login(
@@ -34,7 +34,7 @@ class Vault:
         if not client.is_authenticated():
             raise Exception("Failed to authenticate with vault")
 
-        logger.info("Authenticated")
+        logger.debug("Authenticated")
 
         cls._client = client
 
@@ -49,6 +49,7 @@ class Vault:
         :return: Dictionary with username and password
         """
         response = cls.client.secrets.database.get_static_credentials(role, mount_point=mount)
+        logger.info(f"Retrieved static-credential '{role}'")
         return {
             'username': response['data']['username'],
             'password': response['data']['password'],
@@ -66,4 +67,5 @@ class Vault:
             path=path,
             mount_point=mount
         )
+        logger.info(f"Retrieved secret '{path}'")
         return response['data']['data']
