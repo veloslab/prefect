@@ -1,6 +1,8 @@
 import pymysql.cursors
+from pymysql.err import DataError
 from dataclasses import dataclass, field
 from typing import Union, List, Dict, Tuple
+import re
 import atexit
 from utility.hashicorp.vault import Vault
 
@@ -47,12 +49,29 @@ class Connection:
             self._connection.close()
         return self._connection
 
-    def execute(self, query: str) -> Result:
+    def execute(self, query: str, insert_args: Dict = None) -> Result:
         with self.connect as connection:
             connection.ping(reconnect=True)
-            with connection.cursor() as cursor:
-                cursor.execute(query)
-                r = Result(data=cursor.fetchall(), affected=cursor.rowcount)
+            try:
+                with connection.cursor() as cursor:
+                    if insert_args:
+                        cursor.executemany(query, insert_args['values'])
+                    else:
+                        cursor.execute(query)
+                    r = Result(data=cursor.fetchall(), affected=cursor.rowcount)
+            except DataError as e:
+                if insert_args:
+                    # An error occurred with values we are trying to insert
+                    row_search = re.search(r'(column.*)at row (\d+)', repr(e))
+                    if row_search:
+                        row_index = int(row_search.group(2)) - 1
+                        offending_row = {
+                            insert_args['columns'][i]: insert_args['values'][row_index][i]
+                            for i in range(len(insert_args['columns']))
+                        }
+                        raise DataError(f"Review {row_search.group(1)}: {offending_row}") from e
+                raise e
+
         return r
 
     def drop_temp_tables(self):

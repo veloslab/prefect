@@ -28,14 +28,14 @@ class MySql:
               pandas: bool = False,
               one_column: bool = False,
               one_row: bool = False,
-              one_value: bool = False) -> Union[Result, Dict, List, DataFrame]:
+              one_value: bool = False) -> Union[Result, Dict, List, DataFrame, None]:
         """
         Query MySql database, preferably using SELECT
         :param query: Query
-        :param pandas: Default False, if True will return results as pandas.Dataframe
-        :param one_column: Default False, if True it will return result as List
-        :param one_row: Default True, if True will return result as Dictionary
-        :param one_value: Default False, if True will return as a value that depends on mysql column structure
+        :param pandas: Default False, if True will return select results as pandas.Dataframe
+        :param one_column: Default False, if True it will select return result as List
+        :param one_row: Default True, if True will return select result as Dictionary
+        :param one_value: Default False, if True will return sole value from select result
         :return:  Query Result
         """
         if sum([one_column, one_row, one_value]) > 1:
@@ -50,22 +50,25 @@ class MySql:
             df.columns = result.columns
             return df
 
-        if result.affected:
-            if (one_row or one_value) and result.affected > 1:
-                raise ValueError(f"Query resulted in {result.affected} rows "
-                                 f"but one_{'row' if one_row else 'value'} set to True")
+        if query.strip().lower().startswith('select'):
+            if result.affected:
+                if (one_row or one_value) and result.affected > 1:
+                    raise ValueError(f"Query resulted in {result.affected} rows "
+                                     f"but one_{'row' if one_row else 'value'} set to True")
 
-            if (one_column or one_value) and len(result.columns) > 1:
-                raise ValueError(f"Query resulted in {len(result.columns)} columns "
-                                 f"but one_{'column' if one_row else 'value'} set to True")
-            if one_value:
-                return result.data[0].values()[0]
-            elif one_row:
-                return result.data[0]
-            elif one_column:
-                return [i.values()[0] for i in result.data]
+                if (one_column or one_value) and len(result.columns) > 1:
+                    raise ValueError(f"Query resulted in {len(result.columns)} columns "
+                                     f"but one_{'column' if one_row else 'value'} set to True")
+                if one_value:
+                    return result.data[0].values()[0]
+                elif one_row:
+                    return result.data[0]
+                elif one_column:
+                    return [i.values()[0] for i in result.data]
+                else:
+                    return result.data
             else:
-                return result.data
+                return None
         else:
             return result
 
@@ -83,19 +86,21 @@ class MySql:
         """
 
         data = [data] if isinstance(data, dict) else data
-        columns = data[0].keys()
+        columns = list(data[0].keys())
         column_statement = "(`" + "`, `".join(columns) + "`)"
         insert_statement = f"{insert_type} INTO {table}{column_statement} VALUES "
+        values_statement = "(" + ", ".join(["%s"] * len(columns)) + ")"
         odku_statement = f"\nON DUPLICATE KEY UPDATE {odku}" if odku else ""
-        row_statements = []
 
+        insert_query = f"{insert_statement}\n{values_statement}\n{odku_statement}"
+
+        rows = []
         for row in data:
-            if list(row.keys()) != list(columns):
+            if list(row.keys()) != columns:
                 raise Exception(f"Entry {row} does not have exact columns/correct order, expected {columns}")
-            row_statements.append("('" + "', '".join(str(i) for i in row.values()) + "')")
-        insert_query = insert_statement + "\n" + ",\n".join(row_statements) + odku_statement
+            rows.append(list(row.values()))
 
-        return self.connection.execute(insert_query)
+        return self.connection.execute(insert_query, insert_args={'columns': columns, 'values': rows})
 
     def temp_table(self, structure: str):
         """
@@ -105,6 +110,6 @@ class MySql:
         """
         table = f"`tmp`.`py_{datetime.now().strftime('%Y%m%d')}_{uuid4().hex}`"
         query = f"CREATE TABLE IF NOT EXISTS {table} {structure}"
-        self.connection.connect.query(query)
+        self.connection.execute(query)
         self.connection.add_temp_table(table)
         return table
