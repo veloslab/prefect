@@ -13,4 +13,3 @@ def insert(table: str,
            odku: str = ""):
     with MySql('prefect', host='mysql.veloslab.lan') as mysql:
         return mysql.insert(table, data, insert_type, odku)
-
