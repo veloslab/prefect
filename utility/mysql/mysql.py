@@ -64,7 +64,7 @@ class MySql:
                 elif one_row:
                     return result.data[0]
                 elif one_column:
-                    return [i.values()[0] for i in result.data]
+                    return [list(i.values())[0] for i in result.data]
                 else:
                     return result.data
             else:
