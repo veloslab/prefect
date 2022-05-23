@@ -83,28 +83,25 @@ def persist_posts(posts: List[Dict]):
     )""")
 
     logger.info(f"Created temp table {temp_table}")
-    mysql.insert(temp_table, posts)
+    r = mysql.insert(temp_table, posts)
+    logger.info(f"Populated temp table ({r.affected} rows)")
 
-    # Insert into report table, unique key on acquired
-    mysql.query(f"""
-        INSERT INTO slickdeals.report_post_meta(acquired)
-        SELECT DISTINCT acquired FROM {temp_table}
-        ON DUPLICATE KEY UPDATE id=VALUES(id)
-    """)
-    reports = mysql.query(f"""
-        SELECT distinct report.id
-        FROM {temp_table} temp
-        INNER JOIN slickdeals.report_post_meta report
-            ON temp.acquired = report.acquired
-    """, one_column=True)
+    # Insert into report table
+    reports = mysql.insert_normalize(
+        source_table=temp_table,
+        destination_table="slickdeals.report_post_meta",
+        unique_columns="acquired"
+    )
     logger.info(f"Created report(s) {reports}")
 
-    # Insert into post table, unique key on thread
-    mysql.query(f"""
-        INSERT INTO slickdeals.post (thread, category, title, posted)
-        SELECT thread, category, title, posted FROM {temp_table}
-        ON DUPLICATE KEY UPDATE category=VALUES(category), title=VALUES(title)
-    """)
+    # Insert into posts table
+    mysql.insert_normalize(
+        source_table=temp_table,
+        destination_table="slickdeals.post",
+        unique_columns="thread",
+        additional_columns=["category", "title", "posted"],
+        odku="category=VALUES(category), title=VALUES(title)"
+    )
 
     # Insert into post_meta table
     result = mysql.query(f"""
@@ -116,6 +113,7 @@ def persist_posts(posts: List[Dict]):
         INNER JOIN slickdeals.post 
             on temp.thread = post.thread
     """)
+
     if result.affected != len(posts):
         raise Exception(f"Row count mismatch, expected {len(posts)} but inserted {result.affected}")
     logger.info(f"Inserted {result.affected} rows")

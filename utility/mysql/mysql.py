@@ -87,8 +87,8 @@ class MySql:
 
         data = [data] if isinstance(data, dict) else data
         columns = list(data[0].keys())
-        column_statement = "(`" + "`, `".join(columns) + "`)"
-        insert_statement = f"{insert_type} INTO {table}{column_statement} VALUES "
+        column_statement = "`" + "`, `".join(columns) + "`"
+        insert_statement = f"{insert_type} INTO {table}({column_statement}) VALUES "
         values_statement = "(" + ", ".join(["%s"] * len(columns)) + ")"
         odku_statement = f"\nON DUPLICATE KEY UPDATE {odku}" if odku else ""
 
@@ -113,3 +113,39 @@ class MySql:
         self.connection.execute(query)
         self.connection.add_temp_table(table)
         return table
+
+    def insert_normalize(self,
+                         source_table: str,
+                         destination_table: str,
+                         unique_columns: Union[str|List],
+                         additional_columns: Union[str|List] = None,
+                         odku: str = None
+                         ):
+        unique_columns = [unique_columns] if isinstance(unique_columns, str) else unique_columns
+        if additional_columns is None:
+            additional_columns = []
+        else:
+            additional_columns = [unique_columns] if isinstance(additional_columns, str) else additional_columns
+        insert_columns = unique_columns + additional_columns
+
+        # Create insert query
+        columns_statement = "`" + "`, `".join(insert_columns) + "`"
+        odku_statement = f", {odku}" if odku else ""
+        insert_query = f"""
+            INSERT INTO {destination_table} ({columns_statement})
+            SELECT {columns_statement}
+            FROM {source_table}
+            ON DUPLICATE KEY UPDATE id = VALUES(id) {odku_statement}
+        """
+        self.connection.execute(insert_query)
+
+        # Get inserted/corresponding rows
+        columns_statement = "`" + "`, `".join(unique_columns) + "`"
+        select_query = f"""
+            SELECT DISTINCT destination.id
+            FROM {source_table} source
+            INNER JOIN {destination_table} destination
+            USING({columns_statement})
+        """
+
+        return self.query(select_query, one_column=True)
