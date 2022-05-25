@@ -1,4 +1,7 @@
 from prefect import flow, task, get_run_logger
+from prefect.deployments import DeploymentSpec
+from prefect.orion.schemas.schedules import IntervalSchedule
+from prefect.blocks.storage import FileStorageBlock
 import requests
 import tasks
 from parsel import Selector
@@ -127,6 +130,13 @@ def slickdeals_flow():
     posts = parse_posts(response)
     return persist_posts(posts)
 
+
+DeploymentSpec(
+    flow_location="/veloslab/prefect/flows/etl/slickdeals_flow.py",
+    name="etl-slickdeals",
+    schedule=IntervalSchedule(interval=timedelta(minutes=5)),
+    flow_storage=FileStorageBlock('/veloslab/prefect/storage')
+)
 
 if __name__ == "__main__":
     flow_state = slickdeals_flow()
