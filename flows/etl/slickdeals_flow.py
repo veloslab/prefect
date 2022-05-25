@@ -135,7 +135,7 @@ DeploymentSpec(
     flow_location="/veloslab/prefect/flows/etl/slickdeals_flow.py",
     name="etl-slickdeals",
     schedule=IntervalSchedule(interval=timedelta(minutes=5)),
-    flow_storage=FileStorageBlock('/veloslab/prefect/storage')
+    flow_storage=FileStorageBlock(base_path='/veloslab/prefect/storage')
 )
 
 if __name__ == "__main__":
