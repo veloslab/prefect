@@ -110,7 +110,7 @@ def persist_posts(posts: List[Dict]):
 
     # Insert into post_meta table
     result = mysql.query(f"""
-        INSERT INTO slickdeals.post_meta(report, post, age, comments, views, votes, score) 
+        REPLACE INTO slickdeals.post_meta(report, post, age, comments, views, votes, score) 
         SELECT report.id, post.id, temp.age, temp.comments, temp.views, temp.votes, temp.score
         FROM {temp_table} temp
         INNER JOIN slickdeals.report_post_meta report
