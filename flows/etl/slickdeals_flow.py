@@ -1,6 +1,7 @@
 from prefect import flow, task, get_run_logger
 from prefect.deployments import DeploymentSpec
 from prefect.flow_runners import SubprocessFlowRunner
+from prefect.task_runners import SequentialTaskRunner
 from prefect.orion.schemas.schedules import IntervalSchedule
 from prefect.blocks.storage import FileStorageBlock
 import requests
@@ -124,7 +125,7 @@ def persist_posts(posts: List[Dict]):
     return reports
 
 
-@flow
+@flow(task_runner=SequentialTaskRunner())
 def slickdeals_flow():
     url = "https://slickdeals.net/forums/filtered/?f=9&sortfield=threadstarted&sortorder=desc&perpage=50"
     response = tasks.request(url=url)
