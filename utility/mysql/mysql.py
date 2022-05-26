@@ -135,7 +135,7 @@ class MySql:
             INSERT INTO {destination_table} ({columns_statement})
             SELECT {columns_statement}
             FROM {source_table}
-            ON DUPLICATE KEY UPDATE id = VALUES(id) {odku_statement}
+            ON DUPLICATE KEY UPDATE id = id {odku_statement}
         """
         self.connection.execute(insert_query)
 
