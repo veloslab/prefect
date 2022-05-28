@@ -5,4 +5,5 @@ parsel==1.6.0
 pandas==1.4.2
 pymysql==1.0.2
 alerta==8.5.1
-slack_sdk==3.16.2
+slack_sdk==3.17.0
+playwright==1.22.0
