@@ -2,7 +2,7 @@ from prefect import flow, task, get_run_logger
 from prefect.deployments import DeploymentSpec
 from prefect.flow_runners import SubprocessFlowRunner
 from prefect.task_runners import SequentialTaskRunner
-from prefect.orion.schemas.schedules import IntervalSchedule
+from prefect.orion.schemas.schedules import CronSchedule
 from prefect.blocks.storage import FileStorageBlock
 import requests
 import tasks
@@ -136,7 +136,9 @@ def slickdeals_flow():
 DeploymentSpec(
     flow_location="/veloslab/prefect/lib/flows/etl/slickdeals_flow.py",
     name="etl-slickdeals",
-    schedule=IntervalSchedule(interval=timedelta(minutes=5)),
+    schedule=CronSchedule(
+        cron="*/5 * * * *",
+    ),
     flow_runner=SubprocessFlowRunner(),
     flow_storage=FileStorageBlock(base_path='/veloslab/prefect/storage')
 )
