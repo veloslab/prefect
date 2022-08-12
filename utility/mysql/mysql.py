@@ -121,6 +121,15 @@ class MySql:
                          additional_columns: Union[str|List] = None,
                          odku: str = None
                          ):
+        """
+        Insert data from temp table to destination table
+        :param source_table: Temp Table
+        :param destination_table: Destination Table
+        :param unique_columns: Columns from temp table that should be inserted into destination table's unique columns
+        :param additional_columns: Columns from temp table that should also be inserted besides unique columns
+        :param odku: Additional odku statements for additional columns, like 'ca1=VALUES(ca1), ca2=VALUES(ca2)'
+        :return:
+        """
         unique_columns = [unique_columns] if isinstance(unique_columns, str) else unique_columns
         if additional_columns is None:
             additional_columns = []

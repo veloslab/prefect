@@ -1,9 +1,7 @@
-prefect==2.0b8
+prefect==2.0.4
 python-dateutil==2.8.2
 hvac==0.11.2
 parsel==1.6.0
 pandas==1.4.3
 pymysql==1.0.2
 alerta==8.5.1
-slack_sdk==3.17.2
-playwright==1.23.0
