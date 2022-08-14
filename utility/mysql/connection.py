@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Union, List, Dict, Tuple
 import re
 import atexit
-from utility.hashicorp.vault import Vault
+from utility.hashicorp import Vault
 
 
 @dataclass
