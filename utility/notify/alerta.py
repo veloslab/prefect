@@ -1,5 +1,5 @@
 from alertaclient.api import Client, Alert
-from utility.hashicorp.vault import Vault
+from utility.hashicorp import Vault
 from typing import List, Dict
 
 
