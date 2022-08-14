@@ -90,7 +90,7 @@ def persist_posts(posts: List[Dict]):
     # Insert into report table
     reports = mysql.insert_normalize(
         source_table=temp_table,
-        destination_table="slickdeals.report_post_meta",
+        destination_table="prefect.report_slickdeals_post_meta",
         unique_columns="acquired"
     )
     logger.info(f"Created report(s) {reports}")
@@ -98,7 +98,7 @@ def persist_posts(posts: List[Dict]):
     # Insert into posts table
     mysql.insert_normalize(
         source_table=temp_table,
-        destination_table="slickdeals.post",
+        destination_table="prefect.slickdeals_post",
         unique_columns="thread",
         additional_columns=["category", "title", "posted"],
         odku="category=VALUES(category), title=VALUES(title)"
@@ -106,13 +106,13 @@ def persist_posts(posts: List[Dict]):
 
     # Insert into post_meta table
     result = mysql.query(f"""
-        REPLACE INTO slickdeals.post_meta(report, post, age, comments, views, votes, score) 
-        SELECT report.id, post.id, temp.age, temp.comments, temp.views, temp.votes, temp.score
+        REPLACE INTO prefect.slickdeals_post_meta(report, post, age, comments, views, votes, score) 
+        SELECT report.id, slickdeals_post.id, temp.age, temp.comments, temp.views, temp.votes, temp.score
         FROM {temp_table} temp
-        INNER JOIN slickdeals.report_post_meta report
+        INNER JOIN prefect.report_slickdeals_post_meta report
             ON temp.acquired = report.acquired
-        INNER JOIN slickdeals.post 
-            on temp.thread = post.thread
+        INNER JOIN prefect.slickdeals_post 
+            on temp.thread = slickdeals_post.thread
     """)
 
     if result.affected != len(posts):
