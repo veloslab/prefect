@@ -11,6 +11,7 @@ from typing import List, Dict
 
 @task
 def parse_posts(response: requests.Response):
+    logger = get_run_logger()
     selector = Selector(response.text)
     # Guest users default to pacific time...will need to check DST behavior
     dt_now = datetime.now(tz.gettz('US/Pacific'))
@@ -60,6 +61,8 @@ def parse_posts(response: requests.Response):
 
     if not posts:
         raise Exception("Failed to extract posts from response")
+
+    logger.info(f"Extracted {len(posts)} post(s) from response")
     return posts
 
 
