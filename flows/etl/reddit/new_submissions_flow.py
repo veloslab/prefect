@@ -45,6 +45,7 @@ def get_new_submissions(subreddit: str,
     logger.info(f"Retrieved {post_count_total} submissions post(s) from /r/{subreddit}, "
                 f"{post_count_accepted} meet criteria")
 
+
 @task
 def persist_submissions(submissions: Iterator[Submission]):
     logger = get_run_logger()
@@ -68,6 +69,7 @@ def persist_submissions(submissions: Iterator[Submission]):
     else:
         logger.info(f"No submissions passed regex filters")
         return None
+
 
 @task
 def notify_new_submissions():
