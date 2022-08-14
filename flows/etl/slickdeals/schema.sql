@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS slickdeals.post (
+CREATE TABLE IF NOT EXISTS prefect.slickdeals_post (
   `id` INT(10) UNSIGNED AUTO_INCREMENT,
   `thread` INT NOT NULL UNIQUE,
   `category` VARCHAR(255),
@@ -10,14 +10,14 @@ CREATE TABLE IF NOT EXISTS slickdeals.post (
   PRIMARY KEY(`id`)
 );
 
-CREATE TABLE IF NOT EXISTS slickdeals.report_post_meta (
+CREATE TABLE IF NOT EXISTS prefect.report_slickdeals_post_meta (
   `id` INT(10) UNSIGNED AUTO_INCREMENT,
   `acquired` DATETIME NOT NULL UNIQUE,
   `timestamp` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY(`id`)
 );
 
-CREATE TABLE IF NOT EXISTS slickdeals.post_meta (
+CREATE TABLE IF NOT EXISTS prefect.slickdeals_post_meta (
   `report` INT(10) UNSIGNED,
   `post` INT(10) UNSIGNED,
   `age` INT,
@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS slickdeals.post_meta (
   PRIMARY KEY(`report`, `post`)
 );
 
-ALTER TABLE slickdeals.post_meta
-    ADD FOREIGN KEY (`report`) REFERENCES `slickdeals`.`report_post_meta` (`id`) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE prefect.slickdeals_post_meta
+    ADD FOREIGN KEY (`report`) REFERENCES `prefect`.`report_slickdeals_post_meta` (`id`) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE slickdeals.post_meta
-    ADD FOREIGN KEY (`post`) REFERENCES `slickdeals`.`post` (`id`) ON UPDATE CASCADE;
+ALTER TABLE prefect.slickdeals_post_meta
+    ADD FOREIGN KEY (`post`) REFERENCES `prefect`.`slickdeals_post` (`id`) ON UPDATE CASCADE;
