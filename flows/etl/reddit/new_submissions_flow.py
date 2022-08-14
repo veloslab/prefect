@@ -29,7 +29,7 @@ def get_new_submissions(subreddit: str,
     credentials = Vault.get_secret('reddit/api')
     post_count_total = 0
     post_count_accepted = 0
-    for submission in Reddit(**credentials).subreddit(subreddit).new(limit=limit):
+    for submission in Reddit(**credentials, check_for_async=False).subreddit(subreddit).new(limit=limit):
         post_count_total += 1
         if search_title:
             if re.search(search_title, submission.title, re.IGNORECASE):
@@ -77,31 +77,37 @@ def notify_new_submissions():
         SELECT * FROM prefect.reddit_new_submissions
         WHERE notify = 0 
     """)
-    logger.info(f"Found {len(submissions)} submission(s) that haven't had a notification sent for yet")
-    for submission in submissions:
-        response = Pushover.send(app='prefect',
-                                 message="New Post in /r/{submission['subreddit']}",
-                                 url=f"https://redd.it/{submission['id']}",
-                                 url_title=submission['title'])
-        logger.info(f"Sending notification for {submission['id']}")
-        if response.status_code == 200:
-            mysql.query(f"""
-                UPDATE prefect.reddit_new_submissions
-                SET notify = 1
-                WHERE id = '{submission}'
-            """)
-            logger.info(f"Notification for {submission['id']} successful")
-        else:
-            logger.info(f"Notification for {submission['id']} failed:\n{response.text}")
-            raise requests.exceptions.RequestException(f"Received {response.status_code}")
+    if submissions:
+        logger.info(f"Found {len(submissions)} submission(s) pending notification")
+        for submission in submissions:
+            response = Pushover.send(app='prefect',
+                                     message=f"New Post in /r/{submission['subreddit']}",
+                                     url=f"https://redd.it/{submission['id']}",
+                                     url_title=submission['title'])
+            logger.info(f"Sending notification for {submission['id']}")
+            if response.status_code == 200:
+                mysql.query(f"""
+                    UPDATE prefect.reddit_new_submissions
+                    SET notify = 1
+                    WHERE id = '{submission['id']}'
+                """)
+                logger.info(f"Notification for {submission['id']} successful")
+            else:
+                logger.info(f"Notification for {submission['id']} failed:\n{response.text}")
+                raise requests.exceptions.RequestException(f"Received {response.status_code}")
+    else:
+        logger.info(f"No submissions pending notification")
 
 
-@flow(task_runner=SequentialTaskRunner())
-def new_submissions_flow():
-    submissions = get_new_submissions()
+@flow(task_runner=SequentialTaskRunner(), name="Reddit-New Submissions")
+def new_submissions_flow(subreddit: str, search_title: str = None, search_selftext: str = None, limit: int = 5):
+    submissions = get_new_submissions(subreddit=subreddit,
+                                      search_title=search_title,
+                                      search_selftext=search_selftext,
+                                      limit=limit)
     persist_submissions(submissions)
     notify_new_submissions()
 
 
 if __name__ == "__main__":
-    new_submissions_flow()
+    new_submissions_flow('homelabsales', search_title="[FS]")

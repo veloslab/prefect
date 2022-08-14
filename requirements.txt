@@ -5,3 +5,4 @@ parsel==1.6.0
 pandas==1.4.3
 pymysql==1.0.2
 alerta==8.5.1
+praw==7.6.0
