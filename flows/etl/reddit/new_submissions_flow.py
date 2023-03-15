@@ -85,7 +85,7 @@ def notify_new_submissions():
             response = Pushover.send(app='prefect',
                                      message=f"New Post in /r/{submission['subreddit']}",
                                      url=f"https://redd.it/{submission['id']}",
-                                     url_title=submission['title'])
+                                     url_title=submission['title'][0:100])
             logger.info(f"Sending notification for {submission['id']}")
             if response.status_code == 200:
                 mysql.query(f"""
@@ -101,7 +101,7 @@ def notify_new_submissions():
         logger.info(f"No submissions pending notification")
 
 
-@flow(task_runner=SequentialTaskRunner(), name="Reddit-New Submissions")
+@flow(task_runner=SequentialTaskRunner(), name="reddit-new-submissions")
 def new_submissions_flow(subreddit: str, search_title: str = None, search_selftext: str = None, limit: int = 5):
     submissions = get_new_submissions(subreddit=subreddit,
                                       search_title=search_title,
