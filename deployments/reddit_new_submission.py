@@ -7,9 +7,9 @@ storage = Block.load("github/veloslab-prefect")
 
 buildapcsales = Deployment.build_from_flow(
     flow=new_submissions_flow,
-    name="buildapcsales-watcher",
+    name="buildapcsales",
+    work_pool_name='veloslab',
     parameters={"subreddit": "buildapcsales"},
-    work_queue_pool='veloslab',
     storage=storage,
 )
 
