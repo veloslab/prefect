@@ -14,12 +14,17 @@ from typing import List, Dict
 @task
 def parse_search_results(response: requests.Response):
     logger = get_run_logger()
+    logger.info(f"Processing {response.request.url}")
     selector = Selector(response.text.replace('\r', '').replace('\n', ' '))
     raw_results = selector.re_first(r'<div id="productImpressions" class="hidden">(.*position.?: \d+..})')
     results = json.loads('[' + raw_results.replace("\'", "\"").strip() + ']')
     logger.info(f"Found {len(results)} results")
     return {
-        i['id']: i
+        i['id']: {
+            'name': i['name'],
+            'price': i['price'],
+            'href': selector.xpath(f"//a[contains(@href, {i['id']})]/@href").get('').replace('?ob=1', '')
+        }
         for i in results
     }
 
@@ -31,11 +36,16 @@ def persist_search_results(results: Dict, store: str, category: str):
     items_persisted = mysql.query(f"SELECT id FROM prefect.microcenter_open_box "
                                   f"WHERE store = '{store}' and category = '{category}' and available = 1",
                                   one_column=True)
-    items_persisted = set(items_persisted) if items_persisted else set()
+    items_persisted = set([str(i) for i in items_persisted]) if items_persisted else set()
+    logger.info(f"Retrieved {len(items_persisted)} items from database that are available")
 
     items_current = set(list(results.keys()))
     items_not_available = items_persisted - items_current
     items_new = items_current - items_persisted
+    logger.info(f"Items Current: {len(items_current)}")
+    logger.info(f"Items Persisted: {len(items_persisted)}")
+    logger.info(f"Items Not Available: {len(items_not_available)}")
+    logger.info(f"Items New: {len(items_new)}")
 
     if items_not_available:
         logger.info(f"{len(items_not_available)} items no longer available")
@@ -52,6 +62,7 @@ def persist_search_results(results: Dict, store: str, category: str):
                 'store': store,
                 'category': category,
                 'name': results[item_id]['name'],
+                'url': 'https://microcenter.com' + results[item_id]['href'] + f"?storeID={MICROCENTER_STORES[store]}" if results[item_id]['href'] else None,
                 'price': format_number(results[item_id]['price'], 2),
                 'notify': 0,
                 'available': 1
