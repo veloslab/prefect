@@ -4,6 +4,7 @@ CREATE TABLE `prefect`.`microcenter_open_box` (
   `category` varchar(50) NOT NULL,
   `name` text,
   `price` decimal(12,2) DEFAULT NULL,
+  `url` text,
   `available` tinyint DEFAULT 1,
   `notify` tinyint DEFAULT 0,
   `updated` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
