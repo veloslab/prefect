@@ -53,7 +53,7 @@ class Slack:
             ]
         }
         if color:
-            params['attachments'][0]['color'] = color
+            params['attachments'][0]['color'] = SLACK_COLORS[color]
 
         return cls.post_message(bot_user=bot_user, channel=channel,  **params)
 
