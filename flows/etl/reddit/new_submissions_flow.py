@@ -77,7 +77,7 @@ def notify_new_submissions(subreddit: str):
     logger = get_run_logger()
     mysql = MySql('prefect', 'mysql.veloslab.lan')
     submissions = mysql.query(
-        f"SELECT * FROM prefect.reddit_new_submissions WHERE notify = 1  and subreddit = '{subreddit}'"
+        f"SELECT * FROM prefect.reddit_new_submissions WHERE notify = 0  and subreddit = '{subreddit}'"
     )
     if submissions:
         logger.info(f"Found {len(submissions)} submission(s) pending notification")
