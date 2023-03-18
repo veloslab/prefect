@@ -6,7 +6,7 @@ from praw.models import Submission
 from datetime import datetime
 from utility.mysql import MySql, format_datetime
 from utility.hashicorp import Vault
-from utility.notify import Pushover
+from utility.notify import Slack
 from typing import Iterator
 import re
 
@@ -72,22 +72,31 @@ def persist_submissions(submissions: Iterator[Submission]):
 
 
 @task
-def notify_new_submissions():
+def notify_new_submissions(subreddit: str):
     logger = get_run_logger()
     mysql = MySql('prefect', 'mysql.veloslab.lan')
-    submissions = mysql.query("""
-        SELECT * FROM prefect.reddit_new_submissions
-        WHERE notify = 0 
-    """)
+    submissions = mysql.query(
+        f"SELECT * FROM prefect.reddit_new_submissions WHERE notify = 0  and subreddit = '{subreddit}'"
+    )
     if submissions:
         logger.info(f"Found {len(submissions)} submission(s) pending notification")
         for submission in submissions:
-            response = Pushover.send(app='prefect',
-                                     message=f"New Post in /r/{submission['subreddit']}",
-                                     url=f"https://redd.it/{submission['id']}",
-                                     url_title=submission['title'][0:100])
             logger.info(f"Sending notification for {submission['id']}")
-            if response.status_code == 200:
+            url = f"https://redd.it/{submission['id']}"
+            fallback = f"/r/{subreddit}[new]: {submission['title']}"
+            content = f"*/r/{subreddit}[new]*\n" \
+                      f"{submission['title']}\n" \
+                      f"Posted: {submission['posted']}\n" \
+                      f"<{url}|Link>"
+            response = Slack.post_formatted_message(
+                bot_user='prefect',
+                channel='deals',
+                fallback=fallback,
+                content=content,
+                color='orange'
+            )
+
+            if response.data['ok']:
                 mysql.query(f"""
                     UPDATE prefect.reddit_new_submissions
                     SET notify = 1
@@ -108,8 +117,8 @@ def new_submissions_flow(subreddit: str, search_title: str = None, search_selfte
                                       search_selftext=search_selftext,
                                       limit=limit)
     persist_submissions(submissions)
-    notify_new_submissions()
+    notify_new_submissions(subreddit)
 
 
 if __name__ == "__main__":
-    new_submissions_flow('homelabsales', search_title="[FS]")
+    new_submissions_flow('buildapcsales')
