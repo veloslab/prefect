@@ -7,7 +7,8 @@ SLACK_COLORS = {
     'red': '#ff0000',
     'yellow': '#ffff00',
     'gray': '#808080',
-    'orange': '#FF8633'
+    'black': '#000000',
+    'orange': '#ff5700'
 }
 
 
@@ -41,22 +42,21 @@ class Slack:
         return cls.get_client(bot_user).chat_postMessage(channel=channel_id, text=text, **kwargs)
 
     @classmethod
-    def send_formatted_message(cls, bot_user, channel: str, content: str, title: str = None, color: str = None):
+    def post_formatted_message(cls, bot_user, channel: str, content: str, fallback: str, color: str = None):
         params = {
             "attachments": [
                 {
                     "mrkdwn_in": ["text"],
                     "text": content,
+                    "fallback": fallback
                 }
             ]
         }
-        if title:
-            params['attachments'][0]['title'] = title
         if color:
             params['attachments'][0]['color'] = color
 
-        return cls.post_message(bot_user=bot_user, channel=channel, text=title, **params)
+        return cls.post_message(bot_user=bot_user, channel=channel,  **params)
 
 
 if __name__ == '__main__':
-    response = Slack.send_formatted_message('prefect', 'deals', '```Testing```', 'Test Tile', 'gray')
+    response = Slack.post_formatted_message('prefect', 'deals', '```Testing```', 'Test Tile', 'gray')
