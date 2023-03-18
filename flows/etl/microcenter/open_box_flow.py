@@ -6,6 +6,7 @@ from parsel import Selector
 from dateutil import parser, tz
 from datetime import datetime, timedelta
 from utility.mysql import MySql, format_number
+from notify import Slack
 import json
 from flows.etl.microcenter.constants import MICROCENTER_CATEGORIES, MICROCENTER_STORES
 from typing import List, Dict
@@ -76,6 +77,45 @@ def persist_search_results(results: Dict, store: str, category: str):
         logger.info(f"Persisted/Updated {len(items_new)} items")
 
 
+def notify_search_results(store: str, category: str):
+    logger = get_run_logger()
+    mysql = MySql('prefect', 'mysql.veloslab.lan')
+    items = mysql.query(
+        f"SELECT * FROM prefect.microcenter_open_box "
+        f"WHERE store = '{store}' and category = '{category}' and notify = 0 LIMIT 1"
+    )
+
+    if items:
+        logger.info(f"Found {len(items)} submission(s) pending notification")
+        for item in items:
+            logger.info(f"Sending notification for {item['id']}")
+            content = f"*Microcenter[Open-Box]*\n{item['name']}\n" \
+                      f"```Store: {item['store']}\n" \
+                      f"Category: {item['category']}\n" \
+                      f"<{item['url']}|Link>```"
+            fallback = f"Microcenter-Open Box: {item['name']}"
+            response = Slack.post_formatted_message(
+                bot_user='prefect',
+                channel='deals',
+                fallback=fallback,
+                content=content,
+                color='black'
+            )
+
+            if response.data['ok']:
+                mysql.query(f"""
+                    UPDATE prefect.microcenter_open_box
+                    SET notify = 1
+                    WHERE id = '{item['id']}' and store = '{store}' and category = '{category}'
+                """)
+                logger.info(f"Notification for {item['id']} successful")
+            else:
+                logger.info(f"Notification for {item['id']} failed:\n{response.text}")
+                raise requests.exceptions.RequestException(f"Received {item}")
+    else:
+        logger.info(f"No submissions pending notification")
+
+
 @flow(task_runner=SequentialTaskRunner())
 def microcenter_open_box_flow(category: str, store: str):
     category_id = MICROCENTER_CATEGORIES[category]
@@ -85,6 +125,7 @@ def microcenter_open_box_flow(category: str, store: str):
     response = tasks.request(url=url)
     results = parse_search_results(response=response)
     persist_search_results(results, store, category)
+    notify_search_results(store, category)
 
 
 if __name__ == "__main__":
