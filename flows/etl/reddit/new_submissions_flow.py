@@ -4,6 +4,7 @@ from prefect.task_runners import SequentialTaskRunner
 from praw import Reddit
 from praw.models import Submission
 from datetime import datetime
+import pytz
 from utility.mysql import MySql, format_datetime
 from utility.hashicorp import Vault
 from utility.notify import Slack
@@ -56,7 +57,7 @@ def persist_submissions(submissions: Iterator[Submission]):
             'id': submission.id,
             'subreddit': submission.subreddit.display_name,
             'title': submission.title,
-            'posted': format_datetime(datetime.fromtimestamp(submission.created_utc))  # Converts UTC to Local
+            'posted': format_datetime(datetime.fromtimestamp(submission.created_utc))  # In UTC
         })
     if data:
         r = mysql.insert('prefect.reddit_new_submissions', data=data, insert_type='INSERT IGNORE')
@@ -76,7 +77,7 @@ def notify_new_submissions(subreddit: str):
     logger = get_run_logger()
     mysql = MySql('prefect', 'mysql.veloslab.lan')
     submissions = mysql.query(
-        f"SELECT * FROM prefect.reddit_new_submissions WHERE notify = 0  and subreddit = '{subreddit}'"
+        f"SELECT * FROM prefect.reddit_new_submissions WHERE notify = 1  and subreddit = '{subreddit}'"
     )
     if submissions:
         logger.info(f"Found {len(submissions)} submission(s) pending notification")
@@ -84,9 +85,10 @@ def notify_new_submissions(subreddit: str):
             logger.info(f"Sending notification for {submission['id']}")
             url = f"https://redd.it/{submission['id']}"
             fallback = f"/r/{subreddit}[new]: {submission['title']}"
+            posted_utc = submission['posted'].replace(tzinfo=pytz.UTC)
             content = f"*/r/{subreddit}[new]*\n" \
                       f"{submission['title']}\n" \
-                      f"Posted: {submission['posted']}\n" \
+                      f"Posted: {posted_utc.astimezone(pytz.timezone('US/Eastern'))}\n" \
                       f"<{url}|Link>"
             response = Slack.post_formatted_message(
                 bot_user='prefect',
