@@ -11,7 +11,7 @@ buildapcsales = Deployment.build_from_flow(
     name="buildapcsales",
     work_pool_name='veloslab',
     work_queue_name='reddit_new_submissions',
-    parameters={"subreddit": "buildapcsales", "search_title": "(itx|3080|4080|3070|4070|3090|cpu)"},
+    parameters={"subreddit": "buildapcsales", "search_title": "(itx|3080|4080|3070|4070|3090|cpu|intel)"},
     storage=storage,
     schedule=(IntervalSchedule(interval=120))
 )
