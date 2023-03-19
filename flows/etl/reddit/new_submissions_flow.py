@@ -30,16 +30,19 @@ def get_new_submissions(subreddit: str,
     credentials = Vault.get_secret('reddit/api')
     post_count_total = 0
     post_count_accepted = 0
+    logger.info(search_title)
     for submission in Reddit(**credentials, check_for_async=False).subreddit(subreddit).new(limit=limit):
         post_count_total += 1
-        if search_title:
-            if re.search(search_title, submission.title, re.IGNORECASE):
-                post_count_accepted += 1
-                yield submission
-        elif search_selftext:
-            if re.search(search_selftext, submission.selftext, re.IGNORECASE):
-                post_count_accepted += 1
-                yield submission
+        if search_title or search_selftext:
+            if search_title:
+                if re.search(search_title, submission.title, re.IGNORECASE):
+                    logger.info(submission.title)
+                    post_count_accepted += 1
+                    yield submission
+            elif search_selftext:
+                if re.search(search_selftext, submission.selftext, re.IGNORECASE):
+                    post_count_accepted += 1
+                    yield submission
         else:
             post_count_accepted += 1
             yield submission
