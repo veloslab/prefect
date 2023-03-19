@@ -60,7 +60,7 @@ class MySql:
                     raise ValueError(f"Query resulted in {len(result.columns)} columns "
                                      f"but one_{'column' if one_row else 'value'} set to True")
                 if one_value:
-                    return result.data[0].values()[0]
+                    return list(result.data[0].values())[0]
                 elif one_row:
                     return result.data[0]
                 elif one_column:
