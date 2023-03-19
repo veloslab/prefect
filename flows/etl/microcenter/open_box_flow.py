@@ -75,6 +75,7 @@ def persist_search_results(results: Dict, store: str, category: str):
         logger.info(f"Persisted/Updated {len(items_new)} items")
 
 
+@task
 def notify_search_results(store: str, category: str):
     logger = get_run_logger()
     mysql = MySql('prefect', 'mysql.veloslab.lan')
@@ -84,7 +85,7 @@ def notify_search_results(store: str, category: str):
     )
 
     if items:
-        logger.info(f"Found {len(items)} submission(s) pending notification")
+        logger.info(f"Found {len(items)} item(s) pending notification")
         for item in items:
             logger.info(f"Sending notification for {item['id']}")
             content = f"*Microcenter[Open-Box]*\n{item['name']}\n" \
@@ -111,7 +112,7 @@ def notify_search_results(store: str, category: str):
                 logger.info(f"Notification for {item['id']} failed:\n{response.text}")
                 raise requests.exceptions.RequestException(f"Received {item}")
     else:
-        logger.info(f"No submissions pending notification")
+        logger.info(f"No items pending notification")
 
 
 @flow(task_runner=SequentialTaskRunner())

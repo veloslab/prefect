@@ -13,3 +13,15 @@ CREATE TABLE `prefect`.`microcenter_open_box` (
 
 CREATE INDEX idx_available ON prefect.microcenter_open_box(store, category, available);
 CREATE INDEX idx_notify ON prefect.microcenter_open_box(notify, available);
+
+CREATE TABLE `prefect`.`microcenter_in_stock` (
+  `id` int unsigned NOT NULL,
+  `store` varchar(50) NOT NULL,
+  `name` text,
+  `url` text,
+  `status` VARCHAR(50),
+  `notify` tinyint DEFAULT 0,
+  `updated` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`, `store`,));
+CREATE INDEX idx_notify ON prefect.microcenter_in_stock(notify, status);
