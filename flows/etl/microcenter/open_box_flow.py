@@ -80,7 +80,7 @@ def notify_search_results(store: str, category: str):
     mysql = MySql('prefect', 'mysql.veloslab.lan')
     items = mysql.query(
         f"SELECT * FROM prefect.microcenter_open_box "
-        f"WHERE store = '{store}' and category = '{category}' and notify = 0 LIMIT 1"
+        f"WHERE store = '{store}' and category = '{category}' and notify = 0"
     )
 
     if items:
