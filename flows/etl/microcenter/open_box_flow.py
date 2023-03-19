@@ -3,13 +3,11 @@ from prefect.task_runners import SequentialTaskRunner
 import requests
 import tasks
 from parsel import Selector
-from dateutil import parser, tz
-from datetime import datetime, timedelta
 from utility.mysql import MySql, format_number
-from notify import Slack
+from utility.notify import Slack
 import json
 from flows.etl.microcenter.constants import MICROCENTER_CATEGORIES, MICROCENTER_STORES
-from typing import List, Dict
+from typing import  Dict
 
 
 @task
