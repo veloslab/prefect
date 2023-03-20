@@ -25,6 +25,18 @@ hardwareswap = Deployment.build_from_flow(
     schedule=(IntervalSchedule(interval=60))
 )
 
+homelabsales = Deployment.build_from_flow(
+    flow=new_submissions_flow,
+    name="homelabsales",
+    work_pool_name='veloslab',
+    work_queue_name='reddit_new_submissions',
+    parameters={"subreddit": "homelabsales", "search_title": "(nova|va)"},
+    storage=storage,
+    schedule=(IntervalSchedule(interval=900))
+)
+
+
 if __name__ == "__main__":
     buildapcsales.apply()
     hardwareswap.apply()
+    homelabsales.apply()
