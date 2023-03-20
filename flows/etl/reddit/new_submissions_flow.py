@@ -126,4 +126,4 @@ def new_submissions_flow(subreddit: str, search_title: str = None, search_selfte
 
 
 if __name__ == "__main__":
-    new_submissions_flow('buildapcsales')
+    new_submissions_flow('homelabsales', r'\[FS\]\s?\[us.(nova|va)\]')
