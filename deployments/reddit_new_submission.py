@@ -20,7 +20,7 @@ hardwareswap = Deployment.build_from_flow(
     name="hardwareswap",
     work_pool_name='veloslab',
     work_queue_name='reddit_new_submissions',
-    parameters={"subreddit": "hardwareswap", "search_title": r"\[USA-\w+\]\s*\[H\](itx|3080|4080|3070|4070).*\[H\]"},
+    parameters={"subreddit": "hardwareswap", "search_title": r"\[USA-\w+\]\s*(itx|3080|4080|3070|4070).*\[H\]"},
     storage=storage,
     schedule=(IntervalSchedule(interval=60))
 )
@@ -37,4 +37,4 @@ homelabsales = Deployment.build_from_flow(
 
 
 if __name__ == "__main__":
-    homelabsales.apply()
+    hardwareswap.apply()
