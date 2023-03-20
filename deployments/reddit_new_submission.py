@@ -20,7 +20,7 @@ hardwareswap = Deployment.build_from_flow(
     name="hardwareswap",
     work_pool_name='veloslab',
     work_queue_name='reddit_new_submissions',
-    parameters={"subreddit": "hardwareswap", "search_title": "(itx|3080|4080|3070|4070)"},
+    parameters={"subreddit": "hardwareswap", "search_title": r"\[USA-\w+\]\s*\[H\](itx|3080|4080|3070|4070).*\[H\]"},
     storage=storage,
     schedule=(IntervalSchedule(interval=60))
 )
@@ -30,13 +30,11 @@ homelabsales = Deployment.build_from_flow(
     name="homelabsales",
     work_pool_name='veloslab',
     work_queue_name='reddit_new_submissions',
-    parameters={"subreddit": "homelabsales", "search_title": "(nova|va).*\[W]"},
+    parameters={"subreddit": "homelabsales", "search_title":  r"\[FS\]\s?\[us.(nova|va)\]"},
     storage=storage,
     schedule=(IntervalSchedule(interval=900))
 )
 
 
 if __name__ == "__main__":
-    buildapcsales.apply()
-    hardwareswap.apply()
     homelabsales.apply()
