@@ -87,9 +87,9 @@ def notify_new_submissions(subreddit: str):
         for submission in submissions:
             logger.info(f"Sending notification for {submission['id']}")
             url = f"https://redd.it/{submission['id']}"
-            fallback = f"/r/{subreddit}[new]: {submission['title']}"
+            fallback = f"/r/{subreddit} [New]: {submission['title']}"
             posted_utc = submission['posted'].replace(tzinfo=pytz.UTC)
-            content = f"*/r/{subreddit}[new]*\n" \
+            content = f"*/r/{subreddit}* [New]\n" \
                       f"{submission['title']}\n" \
                       f"Posted: {posted_utc.astimezone(pytz.timezone('US/Eastern'))}\n" \
                       f"<{url}|Link>"

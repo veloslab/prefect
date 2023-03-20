@@ -7,7 +7,7 @@ from utility.mysql import MySql, format_number
 from utility.notify import Slack
 import json
 from flows.etl.microcenter.constants import MICROCENTER_CATEGORIES, MICROCENTER_STORES
-from typing import  Dict
+from typing import Dict
 
 
 @task
@@ -88,11 +88,11 @@ def notify_search_results(store: str, category: str):
         logger.info(f"Found {len(items)} item(s) pending notification")
         for item in items:
             logger.info(f"Sending notification for {item['id']}")
-            content = f"*Microcenter[Open-Box]*\n{item['name']}\n" \
+            content = f"*Microcenter* [Open Box]\n{item['name']}\n" \
                       f"```Store: {item['store']}\n" \
                       f"Category: {item['category']}\n" \
                       f"<{item['url']}|Link>```"
-            fallback = f"Microcenter-Open Box: {item['name']}"
+            fallback = f"Microcenter [Open Box]: {item['name']}"
             response = Slack.post_formatted_message(
                 bot_user='prefect',
                 channel='deals',
@@ -120,7 +120,7 @@ def microcenter_open_box_flow(category: str, store: str):
     category_id = MICROCENTER_CATEGORIES[category]
     store_id = MICROCENTER_STORES[store]
     url = f"https://www.microcenter.com/search/search_results.aspx?N={category_id}&prt=clearance&NTK=all&sortby=match" \
-          f"&rpp=96&storeid={store_id}"
+          f"&storeid={store_id}"
     response = tasks.request(url=url)
     results = parse_search_results(response=response)
     persist_search_results(results, store, category)
