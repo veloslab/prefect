@@ -80,7 +80,7 @@ def notify_item_status(store: str, item_id: str):
         logger.info(f"Found {len(items)} items(s) pending notification")
         for item in items:
             logger.info(f"Sending notification for {item['id']}")
-            content = f"*Microcenter[In Stock]*\n{item['name']}\n" \
+            content = f"*Microcenter [In Stock]*\n{item['name']}\n" \
                       f"```Store: {item['store']}\n" \
                       f"<{item['url']}|Link>```"
             fallback = f"Microcenter-In Stock: {item['name']}"
@@ -117,6 +117,6 @@ def microcenter_in_stock_flow(store: str, url: str):
 
 
 if __name__ == "__main__":
-    item_url = "https://www.microcenter.com/product/664308/msi-z790i-mpg-edge-wifi-intel-lga-1700-mini-itx-motherboard"
+    item_url = "https://www.microcenter.com/product/651471/asus-x670e-e-rog-strix-gaming-wifi-amd-am5-atx-motherboard"
     flow_state = microcenter_in_stock_flow('Fairfax', item_url)
 
