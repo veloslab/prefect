@@ -30,7 +30,7 @@ homelabsales = Deployment.build_from_flow(
     name="homelabsales",
     work_pool_name='veloslab',
     work_queue_name='reddit_new_submissions',
-    parameters={"subreddit": "homelabsales", "search_title": "(nova|va)"},
+    parameters={"subreddit": "homelabsales", "search_title": "(nova|va).*\[W]"},
     storage=storage,
     schedule=(IntervalSchedule(interval=900))
 )
