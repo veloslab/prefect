@@ -13,7 +13,7 @@ buildapcsales = Deployment.build_from_flow(
     work_queue_name='reddit_new_submissions',
     parameters={"subreddit": "buildapcsales", "search_title": "(itx|3080|4080|3070|4070|3090|cpu|intel)"},
     storage=storage,
-    schedule=(IntervalSchedule(interval=120))
+    schedule=(IntervalSchedule(interval=60))
 )
 hardwareswap = Deployment.build_from_flow(
     flow=new_submissions_flow,
@@ -22,7 +22,7 @@ hardwareswap = Deployment.build_from_flow(
     work_queue_name='reddit_new_submissions',
     parameters={"subreddit": "hardwareswap", "search_title": "(itx|3080|4080|3070|4070)"},
     storage=storage,
-    schedule=(IntervalSchedule(interval=120))
+    schedule=(IntervalSchedule(interval=60))
 )
 
 if __name__ == "__main__":
