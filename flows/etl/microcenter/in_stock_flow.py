@@ -73,17 +73,18 @@ def notify_item_status(store: str, item_id: str):
 
     items = mysql.query(
         f"SELECT * FROM prefect.microcenter_in_stock "
-        f"WHERE store = '{store}' and id = '{item_id}' and notify = 0 and status != 'Sold Out1'"
+        f"WHERE store = '{store}' and id = '{item_id}' and notify = 0 and status != 'Sold Out'"
     )
 
     if items:
         logger.info(f"Found {len(items)} items(s) pending notification")
         for item in items:
             logger.info(f"Sending notification for {item['id']}")
-            content = f"*Microcenter [In Stock]*\n{item['name']}\n" \
+            content = f"*Microcenter* [In Stock]\n{item['name']}\n" \
                       f"```Store: {item['store']}\n" \
+                      f"Status: {item['status']}\n" \
                       f"<{item['url']}|Link>```"
-            fallback = f"Microcenter-In Stock: {item['name']}"
+            fallback = f"Microcenter [In Stock]: {item['name']}"
             response = Slack.post_formatted_message(
                 bot_user='prefect',
                 channel='deals',
