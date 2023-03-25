@@ -50,8 +50,35 @@ rockville_z790i = Deployment.build_from_flow(
     schedule=(IntervalSchedule(interval=600))
 )
 
+fairfax_z690i = Deployment.build_from_flow(
+    flow=microcenter_in_stock_flow,
+    name="fairfax_z790i",
+    work_pool_name='veloslab',
+    work_queue_name='microcenter_in_stock',
+    parameters={
+        "store": "Fairfax",
+        "url": "https://www.microcenter.com/product/644627/msi-z690i-meg-unify-ddr5-intel-lga-1700-mini-itx-motherboard"},
+    storage=storage,
+    schedule=(IntervalSchedule(interval=600))
+)
+
+rockville_z690i = Deployment.build_from_flow(
+    flow=microcenter_in_stock_flow,
+    name="rockville_z690i",
+    work_pool_name='veloslab',
+    work_queue_name='microcenter_in_stock',
+    parameters={
+        "store": "Rockville",
+        "url": "https://www.microcenter.com/product/644627/msi-z690i-meg-unify-ddr5-intel-lga-1700-mini-itx-motherboard"},
+    storage=storage,
+    schedule=(IntervalSchedule(interval=600))
+)
+
 if __name__ == '__main__':
+    fairfax_z690i.apply()
     fairfax_z790i.apply()
     fairfax_gpu.apply()
+    rockville_z690i.apply()
     rockville_z790i.apply()
     rockville_gpu.apply()
+
