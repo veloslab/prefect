@@ -52,7 +52,7 @@ rockville_z790i = Deployment.build_from_flow(
 
 fairfax_z690i = Deployment.build_from_flow(
     flow=microcenter_in_stock_flow,
-    name="fairfax_z790i",
+    name="fairfax_z690i",
     work_pool_name='veloslab',
     work_queue_name='microcenter_in_stock',
     parameters={
