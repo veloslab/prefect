@@ -11,7 +11,7 @@ buildapcsales = Deployment.build_from_flow(
     name="buildapcsales",
     work_pool_name='veloslab',
     work_queue_name='reddit_new_submissions',
-    parameters={"subreddit": "buildapcsales", "search_title": "(itx|3080|4080|3070|4070|3090|cpu|intel|keyboard|amd)"},
+    parameters={"subreddit": "buildapcsales", "search_title": "(ssd|nvme|microcenter|itx|4080|4090|cpu|keyboard)"},
     storage=storage,
     schedule=(IntervalSchedule(interval=60))
 )
@@ -20,7 +20,10 @@ hardwareswap = Deployment.build_from_flow(
     name="hardwareswap",
     work_pool_name='veloslab',
     work_queue_name='reddit_new_submissions',
-    parameters={"subreddit": "hardwareswap", "search_title": r"\[USA-\w+\]\s*.*(itx|3080|4080|3070|4070).*\[W\]"},
+    parameters={"subreddit": "hardwareswap",
+                "search_title": r"\[USA-\w+\]\s*.*(itx|3080|4080|3070|4070).*\[W\]",
+                "search_selftext": r"(z690|z690i)",
+                },
     storage=storage,
     schedule=(IntervalSchedule(interval=60))
 )
