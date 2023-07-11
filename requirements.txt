@@ -8,3 +8,4 @@ alerta==8.5.2
 praw==7.7.0
 playwright==1.35.0
 slack_sdk==3.21.3
+fabric==3.1.0
