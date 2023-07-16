@@ -31,7 +31,7 @@ def store_backup(latest_backup: Dict, file_response: Response):
         logger.info('Saved file response to lzo file')
         with tmp_file() as file_sql:
             conn = fabric.Connection('localhost')
-            result = conn.run(f"lzop -df {file_lzo} -o {file_sql}", hide=True)
+            result = conn.local(f"lzop -df {file_lzo} -o {file_sql}", hide=True)
             if result.failed:
                 logger.error(result.stderr)
                 raise Exception("Failed to uncompress lzop file")
