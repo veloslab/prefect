@@ -9,7 +9,7 @@ elephantsql_backup = Deployment.build_from_flow(
     flow=elephantsql_backup_flow,
     name='elephantsql_backup',
     work_pool_name='veloslab',
-    work_queue_name='reddit_new_submissions',
+    work_queue_name='system-maintenance',
     storage=storage,
     schedule=(CronSchedule(cron="15 6 * * 0,3"))
 )
