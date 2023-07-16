@@ -7,6 +7,7 @@ storage = Block.load("github/veloslab-prefect")
 
 elephantsql_backup = Deployment.build_from_flow(
     flow=elephantsql_backup_flow,
+    name='elephantsql_backup',
     work_pool_name='veloslab',
     work_queue_name='reddit_new_submissions',
     storage=storage,
