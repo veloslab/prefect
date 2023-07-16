@@ -1,11 +1,11 @@
-prefect==2.10.20
+prefect==2.10.21
 python-dateutil==2.8.2
 hvac==1.1.1
 parsel==1.8.1
 pandas==2.0.3
 pymysql==1.1.0
 alerta==8.5.2
-praw==7.7.0
-playwright==1.35.0
+praw==7.7.1
+playwright==1.36.0
 slack_sdk==3.21.3
 fabric==3.1.0
