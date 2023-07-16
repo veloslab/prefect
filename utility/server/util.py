@@ -19,6 +19,19 @@ def tmp_file(content: Union[str, bytes] = None, prefix: str = None, suffix: str 
     if content:
         with os.fdopen(fd, 'wb' if isinstance(content, bytes) else 'w') as f:
             f.write(content)
+
+
+@contextlib.contextmanager
+def tmp_file(content: str, prefix: str = None) -> str:
+    """
+    Generate a file via context manager, file will be deleted on closure
+    :param content: File Content
+    :param prefix: Prefix for file
+    :return: File path to temp file
+    """
+    fd, temp_path = tempfile.mkstemp(prefix=prefix)
+    with os.fdopen(fd, 'w') as f:
+        f.write(content)
     try:
         yield temp_path
     finally:
