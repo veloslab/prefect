@@ -1,5 +1,6 @@
 from typing import Dict
 from prefect import task, get_run_logger
+import re
 import requests
 
 
@@ -29,6 +30,7 @@ def request(
 
     if url is None:
         raise ValueError("Must provide url")
+    url_redacted = re.sub(r"(?<=\=)[^&]+", "REDACTED", url)
     request_params = {}
     if headers:
         request_params['headers'] = headers
@@ -41,11 +43,11 @@ def request(
     if cert:
         request_params['cert'] = cert
 
-    logger.info(f"Starting [{method}] to {url}")
+    logger.info(f"Starting [{method}] to {url_redacted}")
     response = requests.request(method, url=url, **request_params)
-    logger.info(f"Retrieved [{response.status_code}] from {url}")
+    logger.info(f"Retrieved [{response.status_code}] from {url_redacted}")
 
     if response.status_code == 200:
         return response
     else:
-        raise Exception(f"Received {response.status_code} response code for {url}")
+        raise Exception(f"Received {response.status_code} response code for {url_redacted}")
