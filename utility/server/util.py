@@ -3,19 +3,22 @@ import tempfile
 import contextlib
 from utility.hashicorp import Vault
 from fabric import Connection
+from typing import Union
 
 
 @contextlib.contextmanager
-def tmp_file(content: str, prefix: str = None) -> str:
+def tmp_file(content: Union[str, bytes] = None, prefix: str = None, suffix: str = None) -> str:
     """
-    Generate a file via context manager, file will be deleted on closure
+    Generate a file via context manager, file will be deleted on closure. If content is not full, file will be populated
     :param content: File Content
     :param prefix: Prefix for file
+    :param suffix: Suffix for file
     :return: File path to temp file
     """
-    fd, temp_path = tempfile.mkstemp(prefix=prefix)
-    with os.fdopen(fd, 'w') as f:
-        f.write(content)
+    fd, temp_path = tempfile.mkstemp(prefix=prefix, suffix=suffix)
+    if content:
+        with os.fdopen(fd, 'wb' if isinstance(content, bytes) else 'w') as f:
+            f.write(content)
     try:
         yield temp_path
     finally:
