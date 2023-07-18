@@ -1,5 +1,6 @@
 import os
 import hvac
+import requests
 from typing import Dict
 from logging import getLogger
 logger = getLogger('hashicorp.vault')
@@ -18,7 +19,7 @@ class Vault:
     @classmethod
     def authenticate(cls, url: str = None, token: str = None, role_id: str = None, secret_id: str = None):
         url = url or os.environ['VAULT_ADDR']
-        client = hvac.Client(url=url)
+        client = hvac.Client(url=url, verify='/etc/ssl/certs/ca-certificates.crt')
         token = token or os.environ.get('VAULT_TOKEN', None)
         if token:
             logger.debug("Using token for authentication")
@@ -69,3 +70,10 @@ class Vault:
         )
         logger.info(f"Retrieved secret '{path}'")
         return response['data']['data']
+
+    @classmethod
+    def generate_backup(cls) -> requests.Response:
+        logger.info(f"Initiated secret raft backup")
+        response = cls.client.sys.take_raft_snapshot()
+        logger.info(f"Retrieved secret raft backup")
+        return response
