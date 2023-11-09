@@ -1,0 +1,72 @@
+# Welcome to your prefect.yaml file! You can use this file for storing and managing
+# configuration for deploying your flows. We recommend committing this file to source
+# control along with your flow code.
+
+# Generic metadata about this project
+name: prefect
+prefect-version: null
+
+# build section allows you to manage and build docker images
+build: null
+
+# push section allows you to manage if and how this project is uploaded to remote locations
+push: null
+
+# pull section allows you to provide instructions for cloning this project in remote locations
+pull:
+- prefect.deployments.steps.git_clone:
+    repository: https://github.com/veloslab/prefect.git
+    branch: main
+    access_token: null
+
+
+definitions:
+  schedules:
+    every_ten_minutes: &every_10_minutes
+      interval: 600
+    every_minute: &every_minute
+      interval: 60
+
+  deployments:
+    reddit_new_submission: &reddit_new_submission
+      name: null
+      entrypoint: flows/etl/reddit/new_submissions_flow.py:new_submissions_flow
+      schedule:
+        interval: 60
+      parameters:
+        subreddit: null
+      work_pool:
+        name: veloslab-pool
+        work_queue_name: reddit
+
+
+deployments:
+  - <<: *reddit_new_submission
+    name: buildapcsales
+    parameters:
+      subreddit: buildapcsales
+      search_title: (ssd|nvme|hdd)
+
+  - <<: *reddit_new_submission
+    name: homelabsales
+    schedule:
+      interval: 600
+    parameters:
+      subreddit: homelabsales
+      search_title: (VA|NOVA|Virginia)
+
+  - name: backup
+    entrypoint: flows/system/maintenance/elephantsql_backup_flow.py:elephantsql_backup_flow
+    schedule:
+      cron: 15 6 * * 0,3
+    work_pool:
+      name: veloslab-pool
+      work_queue_name: system
+
+  - name: backup
+    entrypoint: flows/system/maintenance/hashicorp_backup.py:hashicorp_vault_backup_flow
+    schedule:
+      cron: 15 6 * * *
+    work_pool:
+      name: veloslab-pool
+      work_queue_name: system
