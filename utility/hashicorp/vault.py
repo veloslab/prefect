@@ -22,6 +22,7 @@ class Vault:
         if os.path.exists('/etc/ssl/certs/ca-certificates.crt'):
             client = hvac.Client(url=url, verify='/etc/ssl/certs/ca-certificates.crt')
         else:
+            logger.warning("/etc/ssl/certs/ca-certificates.crt doesn't exist, using verify=True instead")
             client = hvac.Client(url=url, verify=True)
         token = token or os.environ.get('VAULT_TOKEN', None)
         if token:
