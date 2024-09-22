@@ -1,5 +1,4 @@
 from prefect import flow, task, get_run_logger
-from prefect.task_runners import SequentialTaskRunner
 import requests
 import tasks
 from parsel import Selector
@@ -107,7 +106,7 @@ def notify_item_status(store: str, item_id: str):
         logger.info(f"No items pending notification")
 
 
-@flow(task_runner=SequentialTaskRunner())
+@flow()
 def microcenter_in_stock_flow(store: str, url: str):
     store_id = MICROCENTER_STORES[store]
     url = f"{url}?storeid={store_id}"

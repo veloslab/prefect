@@ -1,5 +1,4 @@
 from prefect import flow, task, get_run_logger
-from prefect.task_runners import SequentialTaskRunner
 import requests
 import tasks
 from parsel import Selector
@@ -115,7 +114,7 @@ def notify_search_results(store: str, category: str):
         logger.info(f"No items pending notification")
 
 
-@flow(task_runner=SequentialTaskRunner())
+@flow()
 def microcenter_open_box_flow(category: str, store: str):
     category_id = MICROCENTER_CATEGORIES[category]
     store_id = MICROCENTER_STORES[store]
