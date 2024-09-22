@@ -19,7 +19,10 @@ class Vault:
     @classmethod
     def authenticate(cls, url: str = None, token: str = None, role_id: str = None, secret_id: str = None):
         url = url or os.environ['VAULT_ADDR']
-        client = hvac.Client(url=url, verify='/etc/ssl/certs/ca-certificates.crt')
+        if os.path.exists('/etc/ssl/certs/ca-certificates.crt'):
+            client = hvac.Client(url=url, verify='/etc/ssl/certs/ca-certificates.crt')
+        else:
+            client = hvac.Client(url=url, verify=True)
         token = token or os.environ.get('VAULT_TOKEN', None)
         if token:
             logger.debug("Using token for authentication")
