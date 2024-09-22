@@ -1,6 +1,5 @@
 import requests.exceptions
 from prefect import flow, task, get_run_logger
-from prefect.task_runners import SequentialTaskRunner
 from praw import Reddit
 from praw.models import Submission
 from datetime import datetime
@@ -115,8 +114,8 @@ def notify_new_submissions(subreddit: str):
         logger.info(f"No submissions pending notification")
 
 
-@flow(task_runner=SequentialTaskRunner(), name="reddit-new-submissions")
-def new_submissions_flow(subreddit: str, search_title: str = None, search_selftext: str = None, limit: int = 5):
+@flow(name="reddit-new-submissions")
+def new_submissions_flow(subreddit: str, search_title: str = "", search_selftext: str = "", limit: int = 5):
     submissions = get_new_submissions(subreddit=subreddit,
                                       search_title=search_title,
                                       search_selftext=search_selftext,

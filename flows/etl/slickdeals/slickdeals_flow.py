@@ -1,5 +1,4 @@
 from prefect import flow, task, get_run_logger
-from prefect.task_runners import SequentialTaskRunner
 import requests
 import tasks
 from parsel import Selector
@@ -124,7 +123,7 @@ def persist_posts(posts: List[Dict]):
     return reports
 
 
-@flow(task_runner=SequentialTaskRunner())
+@flow()
 def slickdeals_flow():
     url = "https://slickdeals.net/forums/filtered/?f=9&sortfield=threadstarted&sortorder=desc&perpage=50"
     response = tasks.request(url=url)
