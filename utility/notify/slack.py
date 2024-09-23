@@ -8,7 +8,8 @@ SLACK_COLORS = {
     'yellow': '#ffff00',
     'gray': '#808080',
     'black': '#000000',
-    'orange': '#ff5700'
+    'orange': '#ff5700',
+    'dusty_blue': '#8c9dad'
 }
 
 
