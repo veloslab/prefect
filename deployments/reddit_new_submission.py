@@ -25,7 +25,7 @@ hardwareswap = Deployment.build_from_flow(
                 "search_selftext": r"(z690|z690i)",
                 },
     storage=storage,
-    schedule=(IntervalSchedule(interval=60))
+    schedule=(IntervalSchedule(interval=900))
 )
 
 homelabsales = Deployment.build_from_flow(
