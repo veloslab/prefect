@@ -1,5 +1,4 @@
 from prefect import flow, task, get_run_logger
-from prefect.task_runners import SequentialTaskRunner
 import tasks
 from requests import Response
 from utility.hashicorp import Vault
@@ -43,7 +42,7 @@ def store_backup(latest_backup: Dict, file_response: Response):
             return file_response
 
 
-@flow(task_runner=SequentialTaskRunner())
+@flow()
 def elephantsql_backup_flow():
     logger = get_run_logger()
     db_info = Vault.get_secret('elephantsql/alerta')
