@@ -4,15 +4,10 @@ from prefect import flow, task, get_run_logger
 import requests
 import tasks
 from parsel import Selector
-from utility.mysql import MySql, format_number
+from utility.mysql import MySql
 from utility.notify import Slack
-import json
 from typing import Dict
 
-BANKS = {
-    'AFCU': 'https://mortgages.cumortgage.net/rates.asp?siteId=EFE2F354-28CC-4C97-9690-04B28CE15AD7',
-    'NFCU': 'https://www.navyfederal.org/loans-cards/mortgage/mortgage-rates/conventional-fixed-rate-mortgages.html'
-}
 
 def parse_afcu(response: requests.Response):
     logger = get_run_logger()
@@ -141,5 +136,3 @@ def mortgage_rates_flow():
 
 if __name__ == "__main__":
     mortgage_rates_flow()
-
-
