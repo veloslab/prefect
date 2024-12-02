@@ -9,6 +9,34 @@ from utility.notify import Slack
 import json
 from typing import Dict
 
+BANKS = {
+    'AFCU': 'https://mortgages.cumortgage.net/rates.asp?siteId=EFE2F354-28CC-4C97-9690-04B28CE15AD7',
+    'NFCU': 'https://www.navyfederal.org/loans-cards/mortgage/mortgage-rates/conventional-fixed-rate-mortgages.html'
+}
+
+def parse_afcu(response: requests.Response):
+    logger = get_run_logger()
+    logger.info(f"Processing {response.request.url}")
+    selector = Selector(response.text)
+    posted = datetime.now()
+    results = []
+    for table in selector.xpath("//div[@id='rate_box']//table"):
+        term = table.xpath("./caption/a/text()").get()
+        if not term:
+            continue
+        rate = table.xpath("./tbody/tr/td/span[contains(text(), 'Interest Rate')]/../text()").get()
+        discount_points = table.xpath("./tbody/tr/td/span[contains(text(), 'Discount Points')]/../text()").get()
+        if term is None or rate is None or discount_points is None:
+            raise Exception(f"Could not extract all data from {table.get()}")
+        results.append({
+            'posted': posted,
+            'bank': 'AFCU',
+            'term': term,
+            'rate': float(rate.replace("%", "")),
+            'discount_points': float(discount_points)
+        })
+    return results
+
 
 @task
 def parse_nfcu(response: requests.Response):
@@ -87,15 +115,28 @@ def notify_change(results: Dict):
     else:
         logger.info(f"No rate changes found")
 
-
 @flow()
-def mortgage_rates_flow():
-    nfcu_url = 'https://www.navyfederal.org/loans-cards/mortgage/mortgage-rates/conventional-fixed-rate-mortgages.html'
-    response = tasks.request(url=nfcu_url)
+def nfcu_rates_flow():
+    url = 'https://www.navyfederal.org/loans-cards/mortgage/mortgage-rates/conventional-fixed-rate-mortgages.html'
+    response = tasks.request(url=url)
     results = parse_nfcu(response=response)
     persist_results_history(results)
     notify_change(results)
     persist_results_latest(results)
+
+@flow()
+def afcu_rates_flow():
+    url = 'https://mortgages.cumortgage.net/rates.asp?siteId=EFE2F354-28CC-4C97-9690-04B28CE15AD7'
+    response = tasks.request(url=url)
+    results = parse_afcu(response=response)
+    persist_results_history(results)
+    notify_change(results)
+    persist_results_latest(results)
+
+@flow()
+def mortgage_rates_flow():
+    nfcu_rates_flow()
+    afcu_rates_flow()
 
 
 if __name__ == "__main__":
