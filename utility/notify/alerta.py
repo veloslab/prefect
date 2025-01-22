@@ -7,7 +7,6 @@ class Alerta:
     _client: Client = None
 
     @classmethod
-    @property
     def client(cls, endpoint: str = None, key: str = None, debug: bool = False) -> Client:
         if cls._client is None:
             if endpoint and key:
@@ -55,5 +54,5 @@ class Alerta:
             if value:
                 data[key] = value
 
-        alert = cls.client.send_alert(**data)
+        alert = cls.client().send_alert(**data)
         return alert

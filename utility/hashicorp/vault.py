@@ -10,7 +10,6 @@ class Vault:
     _client: hvac.Client = None
 
     @classmethod
-    @property
     def client(cls) -> hvac.Client:
         if cls._client is None:
             cls.authenticate()
@@ -53,7 +52,7 @@ class Vault:
         :param mount: Mount for database engine
         :return: Dictionary with username and password
         """
-        response = cls.client.secrets.database.get_static_credentials(role, mount_point=mount)
+        response = cls.client().secrets.database.get_static_credentials(role, mount_point=mount)
         logger.info(f"Retrieved static-credential '{role}'")
         return {
             'username': response['data']['username'],
@@ -68,7 +67,7 @@ class Vault:
         :param mount: Mount for kv2 engine
         :return: Dictionary with username and password
         """
-        response = cls.client.secrets.kv.v2.read_secret_version(
+        response = cls.client().secrets.kv.v2.read_secret_version(
             path=path,
             mount_point=mount
         )
@@ -78,6 +77,9 @@ class Vault:
     @classmethod
     def generate_backup(cls) -> requests.Response:
         logger.info(f"Initiated secret raft backup")
-        response = cls.client.sys.take_raft_snapshot()
+        response = cls.client().sys.take_raft_snapshot()
         logger.info(f"Retrieved secret raft backup")
         return response
+
+if __name__ == "__main__":
+    Vault.get_secret('reddit')
