@@ -52,13 +52,13 @@ deployments:
   - name: mortgage-rates
     entrypoint: flows/etl/mortgage/mortgage_rates_flow.py:mortgage_rates_flow
     schedules:
-      - cron: "15 6 * * *"
+      - cron: "30 9,13,17 * * *"
         timezone: "America/New_York"
     work_pool: *vls_etl
 
   - name: vault-backup
     entrypoint: flows/system/maintenance/hashicorp_backup.py:hashicorp_vault_backup_flow
     schedules:
-      - cron: "30 9,13,17 * * *"
+      - cron: "15 4 * * *"
         timezone: "America/New_York"
     work_pool: *vls_system
