@@ -41,7 +41,7 @@ deployments:
     name: buildapcsales
     parameters:
       subreddit: buildapcsales
-      search_title: (ssd|nvme|hdd)
+      search_title: (ssd|nvme|hdd|microcenter)
 
   - <<: *reddit_new_submission
     name: homelabsales
