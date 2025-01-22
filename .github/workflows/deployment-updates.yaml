@@ -19,7 +19,7 @@ jobs:
       - name: Run Prefect Deploy
         uses: PrefectHQ/actions-prefect-deploy@v4
         with:
-          deployment-names: Simple
+          all-deployments: "true"
           requirements-file-paths: ./requirements.txt
           deployment-file-path: ./prefect.yaml
         env:
