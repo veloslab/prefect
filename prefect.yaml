@@ -18,11 +18,6 @@ pull:
     directory: /veloslab/prefect/
 
 definitions:
-  schedules:
-    every_ten_minutes: &every_10_minutes
-      interval: 600
-    every_minute: &every_minute
-      interval: 60
   work_pools:
     vls_etl: &vls_etl
       name: vls
@@ -35,8 +30,8 @@ definitions:
     reddit_new_submission: &reddit_new_submission
       name: null
       entrypoint: flows/etl/reddit/new_submissions_flow.py:new_submissions_flow
-      schedule:
-        interval: 600
+      schedules:
+        - interval: 600
       work_pool:
         name: vls
         work_queue_name: etl
@@ -56,14 +51,14 @@ deployments:
 
   - name: mortgage-rates
     entrypoint: flows/etl/mortgage/mortgage_rates_flow.py:mortgage_rates_flow
-    schedule:
-      cron: 15 6 * * *
-      timezone: "America/New_York"
+    schedules:
+      - cron: "15 6 * * *"
+        timezone: "America/New_York"
     work_pool: *vls_etl
 
   - name: vault-backup
     entrypoint: flows/system/maintenance/hashicorp_backup.py:hashicorp_vault_backup_flow
-    schedule:
-      cron: 30 9,13,17 * * *
-      timezone: "America/New_York"
+    schedules:
+      - cron: "30 9,13,17 * * *"
+        timezone: "America/New_York"
     work_pool: *vls_system
