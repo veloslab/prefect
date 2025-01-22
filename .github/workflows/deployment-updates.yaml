@@ -1,0 +1,27 @@
+name: Deployment Updates
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  deploy_flow:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v5.3.0
+        with:
+          python-version: '3.13.1'
+
+      - name: Run Prefect Deploy
+        uses: PrefectHQ/actions-prefect-deploy@v4
+        with:
+          deployment-names: Simple
+          requirements-file-paths: ./requirements.txt
+          deployment-file-path: ./prefect.yaml
+        env:
+          PREFECT_API_KEY: ${{ secrets.PREFECT_API_KEY }}
+          PREFECT_API_URL: ${{ secrets.PREFECT_API_URL }}
