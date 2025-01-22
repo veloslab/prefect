@@ -14,11 +14,8 @@ push: null
 
 # pull section allows you to provide instructions for cloning this project in remote locations
 pull:
-- prefect.deployments.steps.git_clone:
-    repository: https://github.com/veloslab/prefect.git
-    branch: main
-    access_token: null
-
+- prefect.deployments.steps.set_working_directory:
+    directory: /veloslab/prefect/
 
 definitions:
   schedules:
@@ -26,19 +23,23 @@ definitions:
       interval: 600
     every_minute: &every_minute
       interval: 60
+  work_pools:
+    vls_etl: &vls_etl
+      name: vls
+      work_queue_name: etl
+    vls_system: &vls_system
+      name: vls
+      work_queue_name: system
 
   deployments:
     reddit_new_submission: &reddit_new_submission
       name: null
       entrypoint: flows/etl/reddit/new_submissions_flow.py:new_submissions_flow
       schedule:
-        interval: 60
-      parameters:
-        subreddit: null
+        interval: 600
       work_pool:
-        name: veloslab-pool
-        work_queue_name: reddit
-
+        name: vls
+        work_queue_name: etl
 
 deployments:
   - <<: *reddit_new_submission
@@ -49,24 +50,20 @@ deployments:
 
   - <<: *reddit_new_submission
     name: homelabsales
-    schedule:
-      interval: 600
     parameters:
       subreddit: homelabsales
-      search_title: (VA|NOVA|Virginia)
+      search_title: (VA|NOVA|Virginia|MD|Ubiquiti|Unifi)
 
-  - name: backup
-    entrypoint: flows/system/maintenance/elephantsql_backup_flow.py:elephantsql_backup_flow
-    schedule:
-      cron: 15 6 * * 0,3
-    work_pool:
-      name: veloslab-pool
-      work_queue_name: system
-
-  - name: backup
-    entrypoint: flows/system/maintenance/hashicorp_backup.py:hashicorp_vault_backup_flow
+  - name: mortgage-rates
+    entrypoint: flows/etl/mortgage/mortgage_rates_flow.py:mortgage_rates_flow
     schedule:
       cron: 15 6 * * *
-    work_pool:
-      name: veloslab-pool
-      work_queue_name: system
+      timezone: "America/New_York"
+    work_pool: *vls_etl
+
+  - name: vault-backup
+    entrypoint: flows/system/maintenance/hashicorp_backup.py:hashicorp_vault_backup_flow
+    schedule:
+      cron: 30 9,13,17 * * *
+      timezone: "America/New_York"
+    work_pool: *vls_system
