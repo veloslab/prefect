@@ -43,7 +43,7 @@ class MySql:
         """
         if sum([one_column, one_row, one_value]) > 1:
             raise ValueError("You can only set one of these true: one_column, one_row, one_value")
-        where_clause = "WHERE 1=1"
+        where_clause = "WHERE 1"
         if where:
             for k,v in where.items():
                 if isinstance(v, str):
