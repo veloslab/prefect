@@ -1,5 +1,6 @@
 from datetime import datetime
 import pandas as pd
+import matplotlib.pyplot as plt
 from prefect import flow, task, get_run_logger
 import requests
 import tasks
@@ -97,13 +98,46 @@ def notify_change(results: Dict):
         response = Slack.post_formatted_message(
             bot_user='prefect',
             channel='mortgage-rates',
-
             fallback=fallback,
             content=content,
             color='dusty_blue'
         )
+        bank_name = results[0]['bank']
         if response.data['ok']:
-            logger.info(f"Notification Successful")
+            logger.info(f"Initial Notification Successful")
+            thread_ts = response.data['ts']
+            logger.info(f"Generating Plot")
+            # Generate plot for rates that changed
+            # Pull historical data
+            df_historical = mysql.query(
+                query=f"SELECT bank, term, posted, rate FROM prefect.mortgage_rates_history",
+                where={'bank': bank_name, 'term': list(df_diff['term'])},
+                pandas=True)
+            # Generate Plot
+            fig, ax = plt.subplots(figsize=(10, 6))
+            for term, group in df_historical.groupby('term'):
+                # Sort values to ensure proper line plotting
+                group = group.sort_values('posted')
+                # Plot without markers, using actual dates
+                ax.plot(group['posted'],
+                        group['rate'],
+                        label=term,
+                        linewidth=2)
+            ax.grid(True)
+            ax.set_xlabel('Datetime')
+            ax.set_ylabel('Interest Rates')
+            ax.set_title(f"{bank_name} Mortgage Rates")
+            ax.legend(title='Term')
+            r = Slack.post_plot(bot_user='prefect',
+                            channel='mortgage-rates',
+                            plot=fig,
+                            filename=f"{bank_name}-mortgage-rates.png",
+                            thread_ts=thread_ts)
+            if r.data['ok']:
+                logger.info(f"Plot Notification Successful")
+            else:
+                logger.error(f"Plot Notification Failed")
+                raise Exception(f"Plot Notification Failed")
         else:
             logger.error(f"Notification Failed")
             raise Exception(f"Notification Failed")
