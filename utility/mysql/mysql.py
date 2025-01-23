@@ -2,7 +2,7 @@ from .connection import Connection, Result
 from pandas import DataFrame
 from datetime import datetime
 from uuid import uuid4
-from typing import Union, Dict, List
+from typing import Union, Dict, List, Optional
 
 
 class MySql:
@@ -25,6 +25,7 @@ class MySql:
 
     def query(self,
               query: str,
+              where: Optional[Dict] = None,
               pandas: bool = False,
               one_column: bool = False,
               one_row: bool = False,
@@ -32,6 +33,8 @@ class MySql:
         """
         Query MySql database, preferably using SELECT
         :param query: Query
+        :param where: Optional, Dict that should column name as key and value as filters. Will convert lists to 'x,y,z'.
+        Will always do a AND between all key value pairs
         :param pandas: Default False, if True will return select results as pandas.Dataframe
         :param one_column: Default False, if True it will select return result as List
         :param one_row: Default True, if True will return select result as Dictionary
@@ -40,8 +43,16 @@ class MySql:
         """
         if sum([one_column, one_row, one_value]) > 1:
             raise ValueError("You can only set one of these true: one_column, one_row, one_value")
-
-        result = self.connection.execute(query)
+        where_clause = "WHERE 1=1"
+        if where:
+            for k,v in where.items():
+                if isinstance(v, str):
+                    where_clause += f" AND {k}='{v}'"
+                elif isinstance(v, list):
+                    where_clause += f" AND {k} IN ('" + "', '".join([str(i) for i in v]) + "')"
+                else:
+                    raise Exception(f"Unable to handle type for {k}:{v}")
+        result = self.connection.execute(f"{query} {where_clause}")
 
         if pandas:
             if not query.lower().strip().startswith("select"):

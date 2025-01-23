@@ -70,13 +70,14 @@ class Slack:
     def post_plot(cls, bot_user: str, channel: str, plot: pyplot.Figure, filename: str = 'plot.png', thread_ts: str = None):
         with tmp_file() as plt_file:
             plot.savefig(plt_file, format='png')
-            cls.post_file(
+            r = cls.post_file(
                 bot_user=bot_user,
                 channel=channel,
                 file=plt_file,
                 filename=filename,
                 thread_ts=thread_ts
             )
+        return r
 
 if __name__ == '__main__':
     response = Slack.post_formatted_message('prefect', 'deals', '```Testing```', 'Test Tile', 'gray')
