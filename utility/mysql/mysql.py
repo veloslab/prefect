@@ -43,8 +43,8 @@ class MySql:
         """
         if sum([one_column, one_row, one_value]) > 1:
             raise ValueError("You can only set one of these true: one_column, one_row, one_value")
-        where_clause = "WHERE 1"
         if where:
+            where_clause = "WHERE 1"
             for k,v in where.items():
                 if isinstance(v, str):
                     where_clause += f" AND {k}='{v}'"
@@ -52,6 +52,8 @@ class MySql:
                     where_clause += f" AND {k} IN ('" + "', '".join([str(i) for i in v]) + "')"
                 else:
                     raise Exception(f"Unable to handle type for {k}:{v}")
+        else:
+            where_clause = ""
         result = self.connection.execute(f"{query} {where_clause}")
 
         if pandas:
