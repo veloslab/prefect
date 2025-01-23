@@ -1,6 +1,8 @@
 from slack_sdk import WebClient
+from matplotlib import pyplot
 from utility.hashicorp import Vault
-from typing import Dict
+from utility.server.util import tmp_file
+from typing import Dict, Optional
 
 SLACK_COLORS = {
     'green': '#008000',
@@ -43,6 +45,12 @@ class Slack:
         return cls.get_client(bot_user).chat_postMessage(channel=channel_id, text=text, **kwargs)
 
     @classmethod
+    def post_file(cls, bot_user: str, channel: str, file: str = None,
+                  content: str = None, filename: str = None, thread_ts: Optional[str] = None, **kwargs):
+        channel_id = cls.get_channel_id(bot_user, channel)
+        return cls.get_client(bot_user).files_upload_v2(channel=channel_id, file=file, content=content,
+                                                        filename=filename, thread_ts=thread_ts, **kwargs)
+    @classmethod
     def post_formatted_message(cls, bot_user, channel: str, content: str, fallback: str, color: str = None):
         params = {
             "attachments": [
@@ -58,6 +66,17 @@ class Slack:
 
         return cls.post_message(bot_user=bot_user, channel=channel,  **params)
 
+    @classmethod
+    def post_plot(cls, bot_user: str, channel: str, plot: pyplot.Figure, filename: str = 'plot.png', thread_ts: str = None):
+        with tmp_file() as plt_file:
+            plot.savefig(plt_file, format='png')
+            cls.post_file(
+                bot_user=bot_user,
+                channel=channel,
+                file=plt_file,
+                filename=filename,
+                thread_ts=thread_ts
+            )
 
 if __name__ == '__main__':
     response = Slack.post_formatted_message('prefect', 'deals', '```Testing```', 'Test Tile', 'gray')
